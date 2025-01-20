@@ -1,0 +1,21 @@
+"Gamemodes"
+{
+    "versus"
+    {
+        "bp_m1_waterfront"  "The Parish (Beta)"
+        "c1m1_hotel"        "Dead Center"
+        "c2m1_highway"      "Dark Carnival"
+        "c3m1_plankcountry" "Swamp Fever"
+        "c4m1_milltown_a"   "Hard Rain"
+        "c5m1_waterfront"   "The Parish"
+        "c6m1_riverbank"    "The Passing"
+        "c7m1_docks"        "The Sacrifice"
+        "c8m1_apartment"    "No Mercy"
+        "c9m1_alleys"       "Crash Course"
+        "c10m1_caves"       "Death Toll"
+        "c11m1_greenhouse"  "Dead Air"
+        "c12m1_hilltop"     "Blood Harvest"
+        "c13m1_alpinecreek" "Cold Stream"
+        "c14m1_junkyard"    "The Last Stand"
+    }
+}

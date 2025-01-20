@@ -1,0 +1,24 @@
+"Phrases"
+{
+    "TAG"
+    {
+        "en"            "<{green}Vote Map{default}> "
+    }
+
+    "VOTE_COULDOWN"
+    {
+        "#format"       "{1:d}"
+        "en"            "A vote cannot be called at this moment, try again in a {1} second"
+    }
+
+    "VOTE_TITLE"
+    {
+        "#format"       "{1:s}"
+        "en"            "Change map to {1}"
+    }
+    
+    "MENU_TITLE"
+    {
+        "en"            "Choose map:"
+    }
+}
