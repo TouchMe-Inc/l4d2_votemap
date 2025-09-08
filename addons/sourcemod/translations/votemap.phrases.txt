@@ -4,6 +4,17 @@
     {
         "en"            "<{green}Vote Map{default}> "
     }
+    
+    "DENY_FOR_SPECTATOR"
+    {
+        "en"            "Action not available to spectators"
+    }
+
+    "NOT_FOUND_FOR_GAMEMODE"
+    {
+        "#format"       "{1:s}"
+        "en"            "There are no voting campaigns available for mode {1}"
+    }
 
     "VOTE_COULDOWN"
     {

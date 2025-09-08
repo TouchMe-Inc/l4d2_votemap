@@ -12,22 +12,22 @@
 
 public Plugin myinfo =
 {
-    name =        "VoteMap",
-    author =      "TouchMe",
+    name        = "VoteMap",
+    author      = "TouchMe",
     description = "The plugin adds the ability to vote for a company change",
-    version =     "build_0000",
-    url =         "https://github.com/TouchMe-Inc/l4d2_votemap"
+    version     = "build_0001",
+    url         = "https://github.com/TouchMe-Inc/l4d2_votemap"
 }
 
 
-#define LIB_CHANGELEVEL            "l4d2_changelevel" /*< Lib changelevel */
+#define LIB_CHANGELEVEL            "l4d2_changelevel"
 
 #define CONFIG_PATH                "configs/votemap.txt"
 
 #define TRANSLATIONS               "votemap.phrases"
 
-#define MAX_MAP_FILENAME_LENGTH    32
-#define MAX_MAP_DISPLAYNAME_LENGTH 64
+#define MAXLENGTH_MAP_FILENAME     32
+#define MAXLENGTH_MAP_DISPLAYNAME  64
 
 #define TEAM_SPECTATE              1
 
@@ -38,17 +38,17 @@ bool g_bChangeLevelAvailable = false; /*< true if LIB_CHANGELEVEL exist */
 
 enum struct MapInfo
 {
-    char filename[MAX_MAP_FILENAME_LENGTH];
-    char displayname[MAX_MAP_DISPLAYNAME_LENGTH];
+    char filename[MAXLENGTH_MAP_FILENAME];
+    char displayname[MAXLENGTH_MAP_DISPLAYNAME];
 }
 
 StringMap g_smMapsForGamemodes = null; /*< Map: "versus" => [1 => "c1m1_hotel"] */
 
 int g_iTargetMapIndex = 0;
 
-ConVar g_cvGamemode = null; /*< sv_gamemode */
-
-char g_szGamemode[16]; /*< cache for sv_gamemode */
+/*< sv_gamemode */
+ConVar g_cvGamemode = null;
+char g_szGamemode[16];
 
 
 /**
@@ -172,7 +172,7 @@ StringMap ReadConfig(char[] szPathToConfig)
  */
 Action Cmd_VoteMap(int iClient, int args)
 {
-    if (!iClient || IsClientSpectator(iClient)) {
+    if (!iClient) {
         return Plugin_Continue;
     }
 
@@ -184,44 +184,51 @@ Action Cmd_VoteMap(int iClient, int args)
 void ShowVoteMapMenu(int iClient)
 {
     ArrayList aMapsForGamemode;
-    if (!g_smMapsForGamemodes.GetValue(g_szGamemode, aMapsForGamemode)) {
+    if (!g_smMapsForGamemodes.GetValue(g_szGamemode, aMapsForGamemode))
+    {
+        CPrintToChat(iClient, "%T%T", "TAG", iClient, "NOT_FOUND_FOR_GAMEMODE", iClient, g_szGamemode);
         return;
     }
 
-    Menu hMenu = CreateMenu(HandlerShowVoteMapMenu, MenuAction_Select|MenuAction_End);
+    Menu menu = CreateMenu(HandlerShowVoteMapMenu, MenuAction_Select|MenuAction_End);
 
-    SetMenuTitle(hMenu, "%T", "MENU_TITLE", iClient);
+    SetMenuTitle(menu, "%T", "MENU_TITLE", iClient);
 
     MapInfo map;
     char szIdx[8];
-    char szDisplayName[MAX_MAP_DISPLAYNAME_LENGTH];
-    int iSize = aMapsForGamemode.Length;
-    for (int iIdx = 0; iIdx < iSize; iIdx++)
+    char szDisplayName[MAXLENGTH_MAP_DISPLAYNAME];
+    for (int iIdx = 0, iSize = aMapsForGamemode.Length; iIdx < iSize; iIdx++)
     {
         IntToString(iIdx, szIdx, sizeof(szIdx));
         aMapsForGamemode.GetArray(iIdx, map);
 
         if (TranslationPhraseExists(map.displayname)) {
             FormatEx(szDisplayName, sizeof(szDisplayName), "%T", map.displayname, iClient);
-            AddMenuItem(hMenu, szIdx, szDisplayName);
+            menu.AddItem(szIdx, szDisplayName);
         } else {
-            AddMenuItem(hMenu, szIdx, map.displayname);
+            menu.AddItem(szIdx, map.displayname);
         }
     }
 
-    DisplayMenu(hMenu, iClient, -1);
+    menu.Display(iClient, MENU_TIME_FOREVER);
 }
 
-public int HandlerShowVoteMapMenu(Menu hMenu, MenuAction hAction, int iClient, int iItem)
+public int HandlerShowVoteMapMenu(Menu menu, MenuAction action, int iClient, int iItem)
 {
-    switch(hAction)
+    switch (action)
     {
-        case MenuAction_End: CloseHandle(hMenu);
+        case MenuAction_End: delete menu;
 
         case MenuAction_Select:
         {
+            if (IsClientSpectator(iClient))
+            {
+                CPrintToChat(iClient, "%T%T", "TAG", iClient, "DENY_FOR_SPECTATOR", iClient);
+                return 0;
+            }
+
             char szIdx[8];
-            GetMenuItem(hMenu, iItem, szIdx, sizeof(szIdx));
+            GetMenuItem(menu, iItem, szIdx, sizeof(szIdx));
 
             int iIdx = StringToInt(szIdx);
 
@@ -268,13 +275,13 @@ bool RunVoteByClient(int iClient, int iIdx)
  * Called when a vote action is completed.
  *
  * @param hVote             The vote being acted upon.
- * @param tAction           The action of the vote.
+ * @param action            The action of the vote.
  * @param iParam1           First action parameter.
  * @param iParam2           Second action parameter.
  */
-Action HandlerVoteMatchStart(NativeVote hVote, VoteAction tAction, int iParam1, int iParam2)
+Action HandlerVoteMatchStart(NativeVote hVote, VoteAction action, int iParam1, int iParam2)
 {
-    switch (tAction)
+    switch (action)
     {
         case VoteAction_Display:
         {
@@ -288,7 +295,7 @@ Action HandlerVoteMatchStart(NativeVote hVote, VoteAction tAction, int iParam1, 
 
             char sVoteDisplayMessage[128];
             if (TranslationPhraseExists(map.displayname)) {
-                char szDisplayName[MAX_MAP_DISPLAYNAME_LENGTH];
+                char szDisplayName[MAXLENGTH_MAP_DISPLAYNAME];
                 FormatEx(szDisplayName, sizeof(szDisplayName), "%T", map.displayname, iClient);
                 FormatEx(sVoteDisplayMessage, sizeof(sVoteDisplayMessage), "%T", "VOTE_TITLE", iClient, szDisplayName);
             } else {
@@ -336,12 +343,24 @@ Action Timer_ChangeMap(Handle hTimer)
 }
 
 /**
+ * Checks whether the given client is currently a spectator.
  *
+ * @param iClient Client index.
+ * @return True if the client is on TEAM_SPECTATE, false otherwise.
  */
-bool IsClientSpectator(int iClient) {
+bool IsClientSpectator(int iClient)
+{
     return (GetClientTeam(iClient) == TEAM_SPECTATE);
 }
 
+/**
+ * Changes the current map to the specified one.
+ *
+ * If Left 4 DHooks' native L4D2_ChangeLevel is available, it will be used.
+ * Otherwise, falls back to the standard "changelevel" server command.
+ *
+ * @param szMap Name of the map to switch to (e.g. "c2m2_fairgrounds").
+ */
 void ChangeMap(char[] szMap)
 {
     if (g_bChangeLevelAvailable) {
