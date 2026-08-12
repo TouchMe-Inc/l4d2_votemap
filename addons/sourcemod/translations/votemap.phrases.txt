@@ -30,6 +30,6 @@
 
     "MENU_TITLE"
     {
-        "en"            "Choose map:\n "
+        "en"            "Choose map:"
     }
 }
